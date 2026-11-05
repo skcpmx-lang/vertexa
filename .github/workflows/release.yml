@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g. 1.0.0). Leave empty to derive from the tag.'
+        required: false
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  release:
+    name: Build, verify and publish
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = '${{ github.event.inputs.version }}'
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = '${{ github.ref_name }}'.TrimStart('v')
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+') { Write-Host "::error::Unresolvable version '$version'"; exit 1 }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Building MERQO VERTEXA $version"
+
+      - name: Restore
+        run: dotnet restore MERQO.VERTEXA.sln
+      - name: Build
+        run: dotnet build MERQO.VERTEXA.sln -c Release --no-restore
+      - name: Unit tests
+        run: dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit.trx" --results-directory TestResults
+      - name: Integration tests
+        run: dotnet test tests/MERQO.VERTEXA.IntegrationTests/MERQO.VERTEXA.IntegrationTests.csproj -c Release --no-build --logger "trx;LogFileName=integration.trx" --results-directory TestResults
+
+      - name: Package installer and portable build
+        shell: pwsh
+        run: ./scripts/package.ps1 -Version ${{ steps.version.outputs.version }}
+
+      - name: Verify published executable
+        shell: pwsh
+        run: |
+          ./scripts/verify-publish.ps1 -ExePath dist/app/MerqoVertexa.exe -ExpectedVersion ${{ steps.version.outputs.version }}
+          if ($LASTEXITCODE -ne 0) { Write-Host '::error::binary verification failed'; exit 1 }
+
+      - name: Verify installer end to end
+        shell: pwsh
+        run: |
+          ./scripts/verify-setup.ps1 -Setup "dist/MerqoVertexa-Setup-${{ steps.version.outputs.version }}.exe" -Version ${{ steps.version.outputs.version }}
+          if ($LASTEXITCODE -ne 0) { Write-Host '::error::installer verification failed'; exit 1 }
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $tag = "v$version"
+          $checksums = Get-Content dist/SHA256SUMS.txt -Raw
+          $notes = @"
+          ## MERQO VERTEXA $version
+
+          Advanced PC & Laptop Diagnostics Software — Windows 10 (build 17763+) and Windows 11, x64.
+
+          ### Artifacts
+          | File | What it is |
+          | --- | --- |
+          | ``MerqoVertexa-Setup-$version.exe`` | Per-user installer. No administrator rights. Installs to ``%LOCALAPPDATA%\Programs\MERQO VERTEXA``. Silent: ``/S``. |
+          | ``MerqoVertexa-$version-portable-x64.zip`` | Portable package. Extract and run ``MerqoVertexa.exe``. |
+
+          ### Verification
+          ````
+          $checksums
+          ````
+
+          ### This build is unsigned
+          No commercial code-signing certificate is used, so Windows SmartScreen may show
+          *"Windows protected your PC"* the first time you run the installer or the portable
+          executable. That is expected. Do **not** disable SmartScreen or Defender. Verify the
+          SHA-256 values above before running anything, then choose *More info → Run anyway*.
+
+          ### Privacy
+          No telemetry, no accounts, no network access. Diagnostics never leave the machine.
+
+          Anything the operating system or firmware refuses to expose is reported as
+          *Unavailable*, *Unsupported* or *Access denied* — never as a fabricated value.
+
+          Questions: merqoonline@gmail.com
+          "@
+          Set-Content -Path dist/RELEASE_NOTES.md -Value $notes -Encoding utf8
+
+          $assets = @(
+            "dist/MerqoVertexa-Setup-$version.exe",
+            "dist/MerqoVertexa-$version-portable-x64.zip",
+            "dist/SHA256SUMS.txt",
+            "dist/VERSION.txt"
+          )
+          if (gh release view $tag 2>$null) {
+            gh release upload $tag @assets --clobber
+          } else {
+            gh release create $tag @assets --title "MERQO VERTEXA $version" --notes-file dist/RELEASE_NOTES.md
+          }
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MERQO-VERTEXA-release-${{ steps.version.outputs.version }}
+          path: |
+            dist
+            TestResults
+          retention-days: 30
