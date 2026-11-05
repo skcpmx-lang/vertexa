@@ -1,0 +1,26 @@
+# Build output
+bin/
+obj/
+out/
+artifacts/
+publish/
+*.user
+*.suo
+.vs/
+.idea/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+coverage/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+
+# Local runtime data
+*.db
+*.db-shm
+*.db-wal
+runtime-data/

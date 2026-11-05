@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Merqo.Vertexa.App</RootNamespace>
+    <AssemblyName>MerqoVertexa</AssemblyName>
+    <ApplicationIcon>..\..\assets\icons\MerqoVertexa.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <Product>MERQO VERTEXA</Product>
+    <AssemblyTitle>MERQO VERTEXA</AssemblyTitle>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MERQO.VERTEXA.Core\MERQO.VERTEXA.Core.csproj" />
+    <ProjectReference Include="..\MERQO.VERTEXA.Shared\MERQO.VERTEXA.Shared.csproj" />
+    <ProjectReference Include="..\MERQO.VERTEXA.Windows\MERQO.VERTEXA.Windows.csproj" />
+    <ProjectReference Include="..\MERQO.VERTEXA.Storage\MERQO.VERTEXA.Storage.csproj" />
+    <ProjectReference Include="..\MERQO.VERTEXA.Reporting\MERQO.VERTEXA.Reporting.csproj" />
+    <ProjectReference Include="..\MERQO.VERTEXA.Security\MERQO.VERTEXA.Security.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\..\assets\icons\MerqoVertexa.png" Link="Assets\MerqoVertexa.png" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,149 @@
+<UserControl x:Class="Merqo.Vertexa.App.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctrl="clr-namespace:Merqo.Vertexa.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="22,18,22,22">
+        <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,12,12" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="OVERALL HEALTH" Style="{StaticResource MicroLabel}" />
+                        <TextBlock Text="{Binding HealthScore}" FontSize="40" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   Foreground="{DynamicResource AccentBrush}" FontFamily="{StaticResource MonoFont}" />
+                        <TextBlock Text="{Binding HealthHeadline}" Style="{StaticResource Body}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ScanSummary}" Style="{StaticResource Caption}" Margin="0,8,0,0" />
+                        <TextBlock Text="{Binding HealthFormula}" Style="{StaticResource Caption}" Margin="0,8,0,0" TextWrapping="Wrap" Opacity="0.75" />
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button Content="Run scan" Style="{StaticResource PrimaryButton}" Command="{Binding ScanCommand}" Margin="0,0,8,0" />
+                            <Button Content="Open reports" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding OpenPageCommand}" CommandParameter="reports" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Column="1" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock Text="CPU LOAD" Style="{StaticResource MicroLabel}" />
+                            <TextBlock Text="{Binding CpuText}" Style="{StaticResource MonoValue}" FontSize="22" />
+                            <ctrl:Sparkline Values="{Binding CpuHistory}" Height="34" Margin="0,6,0,0"
+                                            Stroke="{DynamicResource AccentBrush}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock Text="MEMORY LOAD" Style="{StaticResource MicroLabel}" />
+                            <TextBlock Text="{Binding MemoryText}" Style="{StaticResource MonoValue}" FontSize="22" />
+                            <ctrl:Sparkline Values="{Binding MemoryHistory}" Height="34" Margin="0,6,0,0"
+                                            Stroke="{DynamicResource InfoBrush}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="TEMPERATURE" Style="{StaticResource MicroLabel}" />
+                            <TextBlock Text="{Binding TemperatureText}" Style="{StaticResource MonoValue}" FontSize="22" />
+                            <TextBlock Text="{Binding LiveNote}" Style="{StaticResource Caption}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,12,0">
+                        <StackPanel>
+                            <TextBlock Text="DISK ACTIVITY" Style="{StaticResource MicroLabel}" />
+                            <TextBlock Text="{Binding DiskText}" Style="{StaticResource MonoValue}" FontSize="17" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" Margin="0,0,12,0">
+                        <StackPanel>
+                            <TextBlock Text="NETWORK" Style="{StaticResource MicroLabel}" />
+                            <TextBlock Text="{Binding NetworkText}" Style="{StaticResource MonoValue}" FontSize="17" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}" Margin="0">
+                        <StackPanel>
+                            <TextBlock Text="BATTERY" Style="{StaticResource MicroLabel}" />
+                            <TextBlock Text="{Binding BatteryText}" Style="{StaticResource MonoValue}" FontSize="17" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Subsystem scores and their evidence" Style="{StaticResource H2}" />
+                    <TextBlock Text="A subsystem with no evidence is excluded from the overall score — never assumed healthy."
+                               Style="{StaticResource Caption}" Margin="0,0,0,8" />
+                    <ItemsControl ItemsSource="{Binding Subsystems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource StrokeBrush}" BorderThickness="0,0,0,1" Padding="0,7">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170" />
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Title}" Style="{StaticResource Body}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding ScoreText}" Style="{StaticResource MonoValue}" />
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="{Binding Explanation}" Style="{StaticResource Caption}" />
+                                            <TextBlock Text="{Binding Evidence}" Style="{StaticResource MicroLabel}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,12,12">
+                    <StackPanel>
+                        <TextBlock Text="Findings and recommendations" Style="{StaticResource H2}" />
+                        <TextBlock Text="Every item cites the measured evidence that produced it." Style="{StaticResource Caption}" Margin="0,0,0,8" />
+                        <ItemsControl ItemsSource="{Binding Alerts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,10">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Style="{StaticResource Chip}" Padding="7,2">
+                                                <TextBlock Text="{Binding Severity}" FontSize="10" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                            </Border>
+                                            <TextBlock Text="{Binding Title}" Style="{StaticResource Body}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Action}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                                        <TextBlock Text="{Binding Evidence}" Style="{StaticResource MicroLabel}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Hardware at a glance" Style="{StaticResource H2}" />
+                        <ItemsControl ItemsSource="{Binding KeyFacts}" ItemTemplate="{StaticResource FactTemplate}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

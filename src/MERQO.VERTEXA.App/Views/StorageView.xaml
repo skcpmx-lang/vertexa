@@ -1,0 +1,53 @@
+<UserControl x:Class="Merqo.Vertexa.App.Views.StorageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="22,18,22,22">
+        <StackPanel>
+            <Border Style="{StaticResource Card}">
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Body}" TextWrapping="Wrap" />
+            </Border>
+            <ItemsControl ItemsSource="{Binding Drives}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Model}" Style="{StaticResource H2}" />
+                                        <Border Style="{StaticResource Chip}" Margin="10,0,0,4">
+                                            <TextBlock Text="{Binding Health}" FontSize="10.5" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Capacity}" Style="{StaticResource MonoValue}" HorizontalAlignment="Right" />
+                                </Grid>
+                                <TextBlock Style="{StaticResource Caption}">
+                                    <Run Text="{Binding Media, Mode=OneWay}" /><Run Text=" · source: " /><Run Text="{Binding Source, Mode=OneWay}" />
+                                </TextBlock>
+                                <TextBlock Text="{Binding Reason}" Style="{StaticResource Caption}" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0"
+                                           Visibility="{Binding HasReason, Converter={StaticResource BoolToVisibility}}" />
+                                <ItemsControl ItemsSource="{Binding NvmeRows}" Style="{StaticResource MetricGrid}" Margin="0,8,0,0" />
+                                <ItemsControl ItemsSource="{Binding Attributes}" Style="{StaticResource MetricGrid}" Margin="0,8,0,0" />
+                                <TextBlock Text="No drive-level health telemetry was returned for this device."
+                                           Style="{StaticResource Caption}" Margin="0,8,0,0"
+                                           Visibility="{Binding HasSmartDetail, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Volumes" Style="{StaticResource H2}" />
+                    <ItemsControl ItemsSource="{Binding VolumeRows}" Style="{StaticResource MetricGrid}" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Write testing" Style="{StaticResource H2}" />
+                    <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap"
+                               Text="Write-intensive benchmarks live on the Benchmarks page. They only ever create and delete their own temporary file inside a folder you choose, and a drive in a failing state gets an explicit warning first." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

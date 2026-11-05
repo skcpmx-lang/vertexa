@@ -1,0 +1,61 @@
+<UserControl x:Class="Merqo.Vertexa.App.Views.PerformanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="22,18,22,22">
+        <StackPanel>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Safety" Style="{StaticResource H2}" />
+                    <TextBlock Text="{Binding SafetyText}" Style="{StaticResource Body}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="Duration (s):" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBox Width="70" Text="{Binding DurationSeconds, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,16,0" />
+                        <TextBlock Text="Storage test size (MB):" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBox Width="80" Text="{Binding StorageSizeMb, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="Storage test folder:" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBox Width="420" Text="{Binding StorageDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Run a benchmark" Style="{StaticResource H2}" />
+                    <WrapPanel>
+                        <Button Content="CPU single-thread" Style="{StaticResource SecondaryButton}" Command="{Binding CpuSingleCommand}" Margin="0,0,8,8" />
+                        <Button Content="CPU multi-thread" Style="{StaticResource SecondaryButton}" Command="{Binding CpuMultiCommand}" Margin="0,0,8,8" />
+                        <Button Content="Memory bandwidth" Style="{StaticResource SecondaryButton}" Command="{Binding MemoryBandwidthCommand}" Margin="0,0,8,8" />
+                        <Button Content="Memory latency" Style="{StaticResource SecondaryButton}" Command="{Binding MemoryLatencyCommand}" Margin="0,0,8,8" />
+                        <Button Content="Storage sequential" Style="{StaticResource SecondaryButton}" Command="{Binding StorageCommand}" Margin="0,0,8,8" />
+                        <Button Content="Cancel" Style="{StaticResource DangerButton}" Command="{Binding CancelCommand}" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource Caption}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                    <TextBlock Text="Write testing creates one temporary file in the chosen folder and deletes it afterwards. Never point it at a drive in a failing state." Style="{StaticResource MicroLabel}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Results" Style="{StaticResource H2}" />
+                    <ItemsControl ItemsSource="{Binding Results}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource StrokeBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                    <StackPanel>
+                                        <Grid>
+                                            <TextBlock Text="{Binding Title}" Style="{StaticResource Body}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding Summary}" Style="{StaticResource MonoValue}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding Workload}" Style="{StaticResource Caption}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Cautions}" Style="{StaticResource MicroLabel}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="No benchmarks run in this session." Style="{StaticResource Caption}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

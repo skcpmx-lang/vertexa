@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Merqo.Vertexa.Security</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MERQO.VERTEXA.Core\MERQO.VERTEXA.Core.csproj" />
+    <ProjectReference Include="..\MERQO.VERTEXA.Shared\MERQO.VERTEXA.Shared.csproj" />
+  </ItemGroup>
+</Project>

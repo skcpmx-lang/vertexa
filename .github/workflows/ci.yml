@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'arena/**', 'feature/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  unit:
+    name: Unit tests (Linux, platform-independent logic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj
+      - name: Build
+        run: dotnet build tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-restore
+      - name: Test
+        run: dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit-results.trx" --results-directory TestResults
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: TestResults
+          retention-days: 14
+
+  windows:
+    name: Build, test and verify (Windows x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore solution
+        run: dotnet restore MERQO.VERTEXA.sln
+      - name: Build (Release)
+        run: dotnet build MERQO.VERTEXA.sln -c Release --no-restore /warnaserror-
+      - name: Unit tests (Windows)
+        run: dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit-windows.trx" --results-directory TestResults
+      - name: Integration tests (real WMI, P/Invoke, SQLite, report export)
+        run: dotnet test tests/MERQO.VERTEXA.IntegrationTests/MERQO.VERTEXA.IntegrationTests.csproj -c Release --no-build --logger "trx;LogFileName=integration.trx" --results-directory TestResults
+      - name: Dependency vulnerability scan
+        shell: pwsh
+        run: |
+          dotnet list MERQO.VERTEXA.sln package --vulnerable --include-transitive 2>&1 | Tee-Object -FilePath vulnerable.txt
+          if (Select-String -Path vulnerable.txt -Pattern 'High|Critical' -Quiet) {
+            Write-Error 'Vulnerable packages detected'
+            exit 1
+          }
+      - name: Publish self-contained single file (win-x64)
+        shell: pwsh
+        run: |
+          dotnet publish src/MERQO.VERTEXA.App/MERQO.VERTEXA.App.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true -p:DebugType=none `
+            -o publish/win-x64
+          Copy-Item LICENSE, THIRD-PARTY-NOTICES.md, README.md -Destination publish/win-x64 -ErrorAction SilentlyContinue
+      - name: Verify published binary (PE, metadata, icon)
+        shell: pwsh
+        run: ./scripts/verify-publish.ps1 -ExePath publish/win-x64/MerqoVertexa.exe -ExpectedVersion '1.0.0'
+      - name: Executable smoke test (headless self test)
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath "publish/win-x64/MerqoVertexa.exe" -ArgumentList "--selftest" -PassThru -Wait
+          Write-Host "self test exit code: $($process.ExitCode)"
+          Get-Content "$env:TEMP\vertexa-selftest.txt" -ErrorAction SilentlyContinue
+          if ($process.ExitCode -ne 0) { Write-Error "self test failed"; exit 1 }
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MERQO-VERTEXA-win-x64-${{ github.sha }}
+          path: |
+            publish/win-x64
+            TestResults
+            vulnerable.txt
+          retention-days: 14

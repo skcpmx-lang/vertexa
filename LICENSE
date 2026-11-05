@@ -1,0 +1,61 @@
+MERQO VERTEXA — PROPRIETARY SOFTWARE LICENSE
+Copyright (c) 2026 Shohan Khan (MERQO). All rights reserved.
+
+PRODUCT: MERQO VERTEXA
+BRAND: MERQO
+FOUNDER / COPYRIGHT HOLDER: Shohan Khan
+CONTACT: merqoonline@gmail.com
+
+1. GRANT OF LICENSE (END USER)
+   Subject to the terms below, the copyright holder grants you a personal,
+   non-exclusive, non-transferable, revocable license to install and use the
+   official binary builds of MERQO VERTEXA on devices that you own or are
+   authorised to administer, for personal or internal business diagnostic
+   purposes.
+
+2. RESTRICTIONS
+   You may not: (a) redistribute, sublicense, sell, rent or lease the software
+   or its binaries; (b) reverse engineer, decompile or disassemble the software
+   except to the extent such restriction is prohibited by applicable law;
+   (c) remove or alter copyright, brand or attribution notices; (d) publish
+   modified builds of the software under the MERQO name or brand.
+
+3. SOURCE CODE
+   This repository is published for transparency, security review and build
+   reproducibility of the official releases. Publication of source code does
+   not grant any right to redistribute binaries or derivative products.
+   Building for your own private, non-commercial verification is permitted.
+
+4. THIRD-PARTY COMPONENTS
+   The software builds against Microsoft .NET and other third-party packages
+   distributed under their own licenses (see THIRD-PARTY-NOTICES.md).
+   Those components remain governed by their respective licenses.
+
+5. DIAGNOSTIC RESULTS AND NO WARRANTY
+   THE SOFTWARE PERFORMS LOCAL HARDWARE INSPECTION AND IS PROVIDED "AS IS",
+   WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+   TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NON-INFRINGEMENT. Diagnostic output reflects data exposed by the operating
+   system, firmware and drivers of the inspected machine. Some sensors,
+   counters and interfaces are not exposed on all hardware and are reported as
+   unavailable rather than estimated. The software is a measurement and
+   reporting aid; it is not a substitute for professional hardware service,
+   and no diagnostic result constitutes a guarantee of device condition.
+
+6. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE, INCLUDING DATA LOSS ARISING FROM STORAGE FAILURE
+   THAT THE SOFTWARE MAY OR MAY NOT HAVE DETECTED.
+
+7. NO AFFILIATION
+   MERQO VERTEXA is an independent product. It is not affiliated with,
+   endorsed by or certified by Microsoft Corporation, Intel, AMD, NVIDIA or any
+   hardware vendor. Vendor names appear only to describe detected hardware.
+
+8. TERMINATION
+   This license terminates automatically if you breach its terms. On
+   termination you must cease use and remove all copies of the binaries.
+
+Contact for licensing enquiries: merqoonline@gmail.com
