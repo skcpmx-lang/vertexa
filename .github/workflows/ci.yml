@@ -29,7 +29,7 @@ jobs:
           dotnet build tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-restore 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           if [ $status -ne 0 ]; then
-            grep -E "error [A-Z]+[0-9]+" build.log | sed 's/^/::error::/' | head -40
+            grep -iE "error" build.log | head -40 | sed 's/^/::error::/'
           fi
           exit $status
       - name: Test
@@ -38,7 +38,7 @@ jobs:
           dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit-results.trx" --results-directory TestResults 2>&1 | tee test.log
           status=${PIPESTATUS[0]}
           if [ $status -ne 0 ]; then
-            grep -E "\[FAIL\]|Assert\.|error [A-Z]+[0-9]+" test.log | sed 's/^/::error::/' | head -40
+            grep -iE "\[FAIL\]|Assert\.|error" test.log | head -40 | sed 's/^/::error::/'
           fi
           exit $status
       - name: Upload results
@@ -73,9 +73,10 @@ jobs:
         run: |
           dotnet build MERQO.VERTEXA.sln -c Release --no-restore 2>&1 | Tee-Object -FilePath build.log
           if ($LASTEXITCODE -ne 0) {
-            $errors = Get-Content build.log | Select-String 'error [A-Z]+[0-9]+'
+            $errors = Get-Content build.log | Select-String 'error'
             $errors | Select-Object -First 40 | ForEach-Object { Write-Host "::error::$($_.Line.Trim())" }
             Write-Host "total errors: $($errors.Count)"
+            Get-Content build.log -Tail 15 | ForEach-Object { Write-Host "::error::tail: $($_.Trim())" }
             exit 1
           }
       - name: Unit tests (Windows)
