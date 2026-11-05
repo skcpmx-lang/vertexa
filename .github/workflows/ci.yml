@@ -24,15 +24,32 @@ jobs:
       - name: Restore
         run: dotnet restore tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj
       - name: Build
-        run: dotnet build tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-restore
+        run: |
+          set -o pipefail
+          dotnet build tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-restore 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            grep -E "error [A-Z]+[0-9]+" build.log | sed 's/^/::error::/' | head -40
+          fi
+          exit $status
       - name: Test
-        run: dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit-results.trx" --results-directory TestResults
+        run: |
+          set -o pipefail
+          dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit-results.trx" --results-directory TestResults 2>&1 | tee test.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            grep -E "\[FAIL\]|Assert\.|error [A-Z]+[0-9]+" test.log | sed 's/^/::error::/' | head -40
+          fi
+          exit $status
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-results
-          path: TestResults
+          path: |
+            TestResults
+            build.log
+            test.log
           retention-days: 14
 
   windows:
@@ -44,19 +61,45 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - name: Restore solution
-        run: dotnet restore MERQO.VERTEXA.sln
+        shell: pwsh
+        run: |
+          dotnet restore MERQO.VERTEXA.sln 2>&1 | Tee-Object -FilePath restore.log
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content restore.log | Select-String 'error' | Select-Object -First 30 | ForEach-Object { Write-Host "::error::$($_.Line)" }
+            exit 1
+          }
       - name: Build (Release)
-        run: dotnet build MERQO.VERTEXA.sln -c Release --no-restore /warnaserror-
+        shell: pwsh
+        run: |
+          dotnet build MERQO.VERTEXA.sln -c Release --no-restore 2>&1 | Tee-Object -FilePath build.log
+          if ($LASTEXITCODE -ne 0) {
+            $errors = Get-Content build.log | Select-String 'error [A-Z]+[0-9]+'
+            $errors | Select-Object -First 40 | ForEach-Object { Write-Host "::error::$($_.Line.Trim())" }
+            Write-Host "total errors: $($errors.Count)"
+            exit 1
+          }
       - name: Unit tests (Windows)
-        run: dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit-windows.trx" --results-directory TestResults
+        shell: pwsh
+        run: |
+          dotnet test tests/MERQO.VERTEXA.UnitTests/MERQO.VERTEXA.UnitTests.csproj -c Release --no-build --logger "trx;LogFileName=unit-windows.trx" --results-directory TestResults 2>&1 | Tee-Object -FilePath unit.log
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content unit.log | Select-String '\[FAIL\]|Assert\.' | Select-Object -First 30 | ForEach-Object { Write-Host "::error::$($_.Line.Trim())" }
+            exit 1
+          }
       - name: Integration tests (real WMI, P/Invoke, SQLite, report export)
-        run: dotnet test tests/MERQO.VERTEXA.IntegrationTests/MERQO.VERTEXA.IntegrationTests.csproj -c Release --no-build --logger "trx;LogFileName=integration.trx" --results-directory TestResults
+        shell: pwsh
+        run: |
+          dotnet test tests/MERQO.VERTEXA.IntegrationTests/MERQO.VERTEXA.IntegrationTests.csproj -c Release --no-build --logger "trx;LogFileName=integration.trx" --results-directory TestResults 2>&1 | Tee-Object -FilePath integration.log
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content integration.log | Select-String '\[FAIL\]|Assert\.' | Select-Object -First 30 | ForEach-Object { Write-Host "::error::$($_.Line.Trim())" }
+            exit 1
+          }
       - name: Dependency vulnerability scan
         shell: pwsh
         run: |
           dotnet list MERQO.VERTEXA.sln package --vulnerable --include-transitive 2>&1 | Tee-Object -FilePath vulnerable.txt
           if (Select-String -Path vulnerable.txt -Pattern 'High|Critical' -Quiet) {
-            Write-Error 'Vulnerable packages detected'
+            Write-Host '::error::Vulnerable packages detected'
             exit 1
           }
       - name: Publish self-contained single file (win-x64)
@@ -67,24 +110,35 @@ jobs:
             -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
             -p:EnableCompressionInSingleFile=true -p:DebugType=none `
             -o publish/win-x64
+          if ($LASTEXITCODE -ne 0) { Write-Host '::error::publish failed'; exit 1 }
           Copy-Item LICENSE, THIRD-PARTY-NOTICES.md, README.md -Destination publish/win-x64 -ErrorAction SilentlyContinue
       - name: Verify published binary (PE, metadata, icon)
         shell: pwsh
-        run: ./scripts/verify-publish.ps1 -ExePath publish/win-x64/MerqoVertexa.exe -ExpectedVersion '1.0.0'
+        run: |
+          ./scripts/verify-publish.ps1 -ExePath publish/win-x64/MerqoVertexa.exe -ExpectedVersion '1.0.0'
+          if ($LASTEXITCODE -ne 0) { Write-Host '::error::binary verification failed'; exit 1 }
       - name: Executable smoke test (headless self test)
         shell: pwsh
         run: |
           $process = Start-Process -FilePath "publish/win-x64/MerqoVertexa.exe" -ArgumentList "--selftest" -PassThru -Wait
           Write-Host "self test exit code: $($process.ExitCode)"
-          Get-Content "$env:TEMP\vertexa-selftest.txt" -ErrorAction SilentlyContinue
-          if ($process.ExitCode -ne 0) { Write-Error "self test failed"; exit 1 }
+          if (Test-Path "$env:TEMP\vertexa-selftest.txt") { Get-Content "$env:TEMP\vertexa-selftest.txt" }
+          if ($process.ExitCode -ne 0) {
+            Get-Content "$env:TEMP\vertexa-selftest.txt" -ErrorAction SilentlyContinue | Select-String 'FAIL' | ForEach-Object { Write-Host "::error::$($_.Line.Trim())" }
+            Write-Host '::error::self test failed'
+            exit 1
+          }
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: MERQO-VERTEXA-win-x64-${{ github.sha }}
+          name: MERQO-VERTEXA-win-x64
           path: |
             publish/win-x64
             TestResults
+            build.log
+            restore.log
+            unit.log
+            integration.log
             vulnerable.txt
           retention-days: 14
