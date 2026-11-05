@@ -31,7 +31,7 @@ public readonly record struct ProviderOutcome<T>(OutcomeKind Kind, T? Value, str
 /// One way of obtaining one fact. Several providers may exist for the same capability;
 /// they are ordered by <see cref="Priority"/> (0 = most trusted) and tried in turn.
 /// </summary>
-public interface IDiagnosticProvider<out T>
+public interface IDiagnosticProvider<T>
 {
     string Id { get; }
     string Source { get; }

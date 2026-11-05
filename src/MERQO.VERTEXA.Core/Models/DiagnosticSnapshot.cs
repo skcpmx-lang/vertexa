@@ -1,3 +1,5 @@
+using Merqo.Vertexa.Core.Battery;
+using Merqo.Vertexa.Core.Storage;
 using Merqo.Vertexa.Shared;
 
 namespace Merqo.Vertexa.Core.Models;
